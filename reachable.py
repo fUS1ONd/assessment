@@ -4,8 +4,18 @@
 Запуск: python reachable.py <файл>
 """
 
+import re
 import sys
 from collections import deque
+
+_INT = re.compile(r"-?[0-9]+")
+
+
+def _to_int(token):
+    """Переводит токен в целое число, допуская только цифры и минус."""
+    if not _INT.fullmatch(token):
+        raise ValueError(f"не число: {token!r}")
+    return int(token)
 
 
 def parse_graph(text):
@@ -17,8 +27,13 @@ def parse_graph(text):
     lines = [line.split() for line in text.splitlines() if line.strip()]
     if not lines or len(lines[0]) != 2:
         raise ValueError("первая строка должна содержать n и m")
-    n, m = (int(x) for x in lines[0])
-    rows = [[int(x) for x in line] for line in lines[1:]]
+    n, m = (_to_int(x) for x in lines[0])
+    if n < 0 or m < 0:
+        raise ValueError("n и m не могут быть отрицательными")
+    rows = [[_to_int(x) for x in line] for line in lines[1:]]
+    # при m = 0 строки матрицы пустые и уже отброшены выше
+    if m == 0 and not rows:
+        return n, []
     if len(rows) != n or any(len(row) != m for row in rows):
         raise ValueError("размеры матрицы не совпадают с n и m")
 
@@ -68,7 +83,7 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("использование: python reachable.py <файл>")
     try:
-        with open(sys.argv[1], encoding="utf-8") as f:
+        with open(sys.argv[1], encoding="utf-8-sig") as f:
             vertices = reachable_from_all(*parse_graph(f.read()))
     except (OSError, ValueError) as e:
         sys.exit(f"ошибка: {e}")
