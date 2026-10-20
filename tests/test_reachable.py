@@ -28,11 +28,14 @@ def test_loop_is_parsed():
     assert parse_graph("1 1\n2\n") == (1, [(0, 0)])
 
 
-@pytest.mark.parametrize("text", [
-    "2 1\n-1\n",          # строк меньше, чем n
-    "2 1\n-1\n3\n",       # недопустимое число
-    "2 1\n-1\n-1\n",      # столбец не похож на ребро
-])
+@pytest.mark.parametrize(
+    "text",
+    [
+        pytest.param("2 1\n-1\n", id="too-few-rows"),
+        pytest.param("2 1\n-1\n3\n", id="bad-value"),
+        pytest.param("2 1\n-1\n-1\n", id="not-an-edge"),
+    ],
+)
 def test_invalid_input(text):
     with pytest.raises(ValueError):
         parse_graph(text)
